@@ -1,7 +1,0 @@
-[versions]
-kotlin = "2.2.20"
-
-[plugins]
-org-jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-# Add this line
-compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
