@@ -41,6 +41,7 @@ fun MapScreen(
     onToggleComplete: (Long) -> Unit,
     onObjectiveClick: (Long) -> Unit,
     onAdd: () -> Unit,
+    showSheet: Boolean = false
 ) {
     val center = objectivesState.objectives.firstOrNull()?.location ?: LatLng(19.432608, -99.133209)
 

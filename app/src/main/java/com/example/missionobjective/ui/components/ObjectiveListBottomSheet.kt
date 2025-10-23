@@ -1,10 +1,13 @@
 package com.example.missionobjective.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -17,7 +20,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
 import com.example.missionobjective.data.Objective
 
@@ -30,11 +35,17 @@ fun ObjectiveListBottomSheet(
     onObjectiveClick: (Long) -> Unit
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
-        Column(Modifier.fillMaxWidth()) {
+        Column(Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.background)
+        ) {
             Text(
                 text = "Mission Objectives",
                 style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+                    .wrapContentWidth()
             )
             Spacer(Modifier.height(8.dp))
             LazyColumn {
@@ -52,7 +63,8 @@ fun ObjectiveListBottomSheet(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { onObjectiveClick(objective.id) }
-                    )
+                            .alpha(if (objective.isCompleted) 0.5f else 1f)
+                        )
                 }
             }
             Spacer(Modifier.height(16.dp))
