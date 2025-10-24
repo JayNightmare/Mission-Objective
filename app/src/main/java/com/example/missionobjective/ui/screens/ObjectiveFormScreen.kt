@@ -49,6 +49,14 @@ fun ObjectiveFormScreen(
     var longitudeText by remember { mutableStateOf("") }
     var isCompleted by remember { mutableStateOf(false) }
 
+    /*
+
+    TODO :
+    1. Replace lat and long with a map picker or a location search field
+    2. Improve validation feedback (e.g., error messages)
+    3. Consider using a ViewModel for better state management if the form becomes more complex
+
+     */
     LaunchedEffect(initial) {
         if (initial != null) {
             titleText = initial.title

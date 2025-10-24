@@ -43,12 +43,28 @@ fun MapScreen(
     onAdd: () -> Unit,
     showSheet: Boolean = false
 ) {
-    val center = objectivesState.objectives.firstOrNull()?.location ?: LatLng(19.432608, -99.133209)
+    /*
+
+    TODO :
+    1. Center map based on all objectives
+    2. Show sheet on open, but remember state when navigating back to map
+    3. Clicking on the marker opens a card with details
+    4. Go to user's current location on map if permission granted
+    5. Improve UI/UX with better styling and animations
+    6. Consider clustering markers if there are many objectives close together
+    7. When all objectives are completed, show a congratulatory message or animation (possibly confetti and sound)
+
+     */
+
+
+//    TODO : Center map based on all objectives
+    val center = objectivesState.objectives.firstOrNull()?.location ?: LatLng(0.0, 0.0)
 
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(center, 13f)
     }
 
+//    TODO : Show sheet on open, but remember state when navigating back to map
     val sheetVisible = remember { mutableStateOf(true) }
 
     Scaffold(
@@ -78,6 +94,7 @@ fun MapScreen(
                     zoomControlsEnabled = false
                 )
             ) {
+//              TODO : Clicking on the marker opens a card with details
                 objectivesState.objectives.forEach { objective ->
                     Marker(
                         state = MarkerState(position = objective.location),
@@ -121,7 +138,9 @@ fun MapScreen(
 private fun MyLocationFab() {
     val requestPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
-        onResult = { /* No-op: example placeholder */ }
+        onResult = {
+//            TODO : Go to user's current location on map if permission granted
+        }
     )
     FloatingActionButton(onClick = {
         requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)

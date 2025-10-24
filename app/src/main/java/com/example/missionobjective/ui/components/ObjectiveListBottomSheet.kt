@@ -34,6 +34,16 @@ fun ObjectiveListBottomSheet(
     onToggleComplete: (Long) -> Unit,
     onObjectiveClick: (Long) -> Unit
 ) {
+    /*
+
+    TODO :
+    1. Add search bar or chips functionality to filter objectives
+    2. Improve UI/UX with better styling and animations
+    3. Slice details with "..." if too long
+    4. Consider adding priority indicators or categories for objectives
+
+    */
+
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(Modifier
             .fillMaxWidth()

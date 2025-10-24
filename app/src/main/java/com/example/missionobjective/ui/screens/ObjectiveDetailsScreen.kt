@@ -83,6 +83,18 @@ fun ObjectiveDetailsScreen(
 
 @Composable
 private fun Content(padding: PaddingValues, objective: Objective?, onToggleComplete: () -> Unit) {
+    /*
+
+    TODO :
+    1. Show street view image if location is available
+    2. Show map snippet with marker
+    3. Show date created/modified
+    4. Improve styling
+    5. Accessibility
+    6. Animations
+    7. Error handling
+
+     */
     if (objective == null) {
         Column(
             modifier = Modifier.fillMaxSize().padding(padding),
