@@ -2,7 +2,6 @@ package com.example.missionobjective.data.local
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import androidx.room.vo.PrimaryKey
 
 @Entity(tableName = "objectives")
 data class ObjectiveEntity(
