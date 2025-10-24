@@ -1,5 +1,8 @@
 [versions]
 kotlin = "2.2.20"
+roomCompiler = "2.8.3"
+[libraries]
+androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "roomCompiler" }
 
 [plugins]
 org-jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }

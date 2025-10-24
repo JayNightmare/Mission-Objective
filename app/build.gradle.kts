@@ -3,6 +3,7 @@ import java.util.Properties
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.kapt")
     alias(libs.plugins.compose.compiler)
 }
 
@@ -61,9 +62,11 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.room.compiler)
+    // Use a consistent, stable Compose BOM
     val composeBom = platform("androidx.compose:compose-bom:2024.10.00")
-    implementation(platform("androidx.compose:compose-bom:2025.10.00"))
-    androidTestImplementation(platform("androidx.compose:compose-bom:2025.10.00"))
+    implementation(composeBom)
+    androidTestImplementation(composeBom)
 
     implementation("androidx.core:core-ktx:1.17.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.4")
@@ -76,7 +79,6 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     implementation("androidx.compose.material:material-icons-extended-android:1.7.8")
 
-
     // Navigation
     implementation("androidx.navigation:navigation-compose:2.9.5")
 
@@ -86,6 +88,11 @@ dependencies {
     // Google Maps
     implementation("com.google.android.gms:play-services-maps:19.2.0")
     implementation("com.google.maps.android:maps-compose:6.12.1")
+
+    // Room for local persistence
+    implementation("androidx.room:room-runtime:2.6.1")
+    implementation("androidx.room:room-ktx:2.6.1")
+    kapt("androidx.room:room-compiler:2.6.1")
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.3.0")

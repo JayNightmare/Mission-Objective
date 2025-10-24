@@ -19,6 +19,11 @@ import com.example.missionobjective.ui.screens.ObjectiveDetailsScreen
 import com.example.missionobjective.ui.screens.ObjectiveFormScreen
 import com.example.missionobjective.ui.theme.MissionObjectiveTheme
 import com.example.missionobjective.viewmodel.ObjectivesViewModel
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import com.example.missionobjective.di.ServiceLocator
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,7 +40,10 @@ fun MissionObjectiveApp() {
     MissionObjectiveTheme {
         Surface(color = MaterialTheme.colorScheme.background) {
             val navController = rememberNavController()
-            val viewModel: ObjectivesViewModel = viewModel()
+            val context = LocalContext.current
+            val repo = remember(context) { ServiceLocator.repository(context) }
+            val viewModel: ObjectivesViewModel = viewModel(factory = ObjectivesViewModel.Factory(repo))
+            val scope = rememberCoroutineScope()
 
             NavHost(navController = navController, startDestination = "map") {
                 composable("map") {
@@ -78,10 +86,12 @@ fun MissionObjectiveApp() {
                         initial = null,
                         onCancel = { navController.popBackStack() },
                         onSave = { title, description, latLng, isCompleted ->
-                            val newId = viewModel.createObjective(title, description, latLng, isCompleted)
-                            // Navigate to details of the created objective
-                            navController.popBackStack()
-                            navController.navigate("details/$newId")
+                            scope.launch {
+                                val newId = viewModel.createObjective(title, description, latLng, isCompleted)
+                                // Navigate to details of the created objective
+                                navController.popBackStack()
+                                navController.navigate("details/$newId")
+                            }
                         }
                     )
                 }

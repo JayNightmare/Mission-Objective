@@ -40,7 +40,7 @@ fun ObjectiveListBottomSheet(
             .background(MaterialTheme.colorScheme.background)
         ) {
             Text(
-                text = "Mission Objectives",
+                text = "Objectives",
                 style = MaterialTheme.typography.headlineSmall,
                 modifier = Modifier
                     .fillMaxWidth()

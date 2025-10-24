@@ -49,14 +49,14 @@ fun MapScreen(
         position = CameraPosition.fromLatLngZoom(center, 13f)
     }
 
-    val showSheet = remember { mutableStateOf(true) }
+    val sheetVisible = remember { mutableStateOf(true) }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Mission Objectives") },
+                title = { Text("Mission Objective") },
                 actions = {
-                    IconButton(onClick = { showSheet.value = true }) {
+                    IconButton(onClick = { sheetVisible.value = true }) {
                         Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Open objectives")
                     }
                     IconButton(onClick = onAdd) {
@@ -91,10 +91,10 @@ fun MapScreen(
                 }
             }
 
-            if (showSheet.value) {
+            if (sheetVisible.value) {
                 ObjectiveListBottomSheet(
                     objectives = objectivesState.objectives,
-                    onDismiss = { showSheet.value = false },
+                    onDismiss = { sheetVisible.value = false },
                     onToggleComplete = onToggleComplete,
                     onObjectiveClick = onObjectiveClick
                 )
