@@ -1,6 +1,6 @@
 <div align="center">
 
-# Mission Objective - IRL Pause Map App
+# Mission Objective
 
 </div>
 
