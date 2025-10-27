@@ -118,4 +118,3 @@ Alternate future themes:
 
 * Uploaded sketches (inventory, map, mission layout)
 * Mood board (x-ray inventory, hand-drawn maps, stylised layouts)
-your mother
