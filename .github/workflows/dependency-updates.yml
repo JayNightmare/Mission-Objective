@@ -10,6 +10,8 @@ jobs:
   check-kotlin-updates:
     name: Check Kotlin Updates
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     
     steps:
       - name: Checkout code
@@ -50,6 +52,8 @@ jobs:
   check-google-services-updates:
     name: Check Google Services Updates
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     
     steps:
       - name: Checkout code
@@ -78,6 +82,8 @@ jobs:
   check-material-updates:
     name: Check Material Components Updates
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     
     steps:
       - name: Checkout code
@@ -113,6 +119,8 @@ jobs:
   gradle-dependency-updates:
     name: Gradle Dependency Updates Report
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     
     steps:
       - name: Checkout code
@@ -157,6 +165,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [check-kotlin-updates, check-google-services-updates, check-material-updates, gradle-dependency-updates]
     if: always()
+    permissions: {}
     
     steps:
       - name: Create summary
