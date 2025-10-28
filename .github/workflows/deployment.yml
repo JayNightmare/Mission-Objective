@@ -68,8 +68,10 @@ jobs:
       - name: Get version information
         id: version
         run: |
-          VERSION_NAME=$(grep "versionName = " app/build.gradle.kts | cut -d '"' -f 2)
-          VERSION_CODE=$(grep "versionCode = " app/build.gradle.kts | awk '{print $3}')
+          # Extract version from build.gradle.kts using Gradle properties
+          ./gradlew properties --no-daemon --console=plain -q | grep "^version:" | awk '{print $2}' > /tmp/version.txt || echo "1.0" > /tmp/version.txt
+          VERSION_NAME=$(grep -oP 'versionName\s*=\s*"\K[^"]+' app/build.gradle.kts || echo "1.0")
+          VERSION_CODE=$(grep -oP 'versionCode\s*=\s*\K[0-9]+' app/build.gradle.kts || echo "1")
           echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
           echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
           echo "Version: $VERSION_NAME ($VERSION_CODE)"

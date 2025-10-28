@@ -134,7 +134,14 @@ jobs:
       
       - name: Check for dependency updates
         run: |
-          ./gradlew dependencyUpdates || echo "dependencyUpdates task not available. Add com.github.ben-manes.versions plugin for full dependency update checking."
+          # Note: This requires the Gradle Versions Plugin to be added to build.gradle.kts
+          # Add the following to your build.gradle.kts to enable this:
+          # plugins {
+          #   id("com.github.ben-manes.versions") version "0.51.0"
+          # }
+          echo "Gradle Versions Plugin not yet configured."
+          echo "To enable dependency update reports, add the plugin to build.gradle.kts"
+          echo "See: https://github.com/ben-manes/gradle-versions-plugin"
         continue-on-error: true
       
       - name: Upload Dependency Updates Report
