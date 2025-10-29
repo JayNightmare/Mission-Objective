@@ -1,0 +1,352 @@
+name: Deployment & Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Trigger on version tags (e.g., v1.0.0, v2.1.3)
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type'
+        required: true
+        type: choice
+        options:
+          - alpha
+          - beta
+          - production
+
+jobs:
+  build-release:
+    name: Build Release APK/AAB
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+      
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+      
+      - name: Setup local.properties
+        run: |
+          echo "MAPS_API_KEY=${{ secrets.MAPS_API_KEY }}" > local.properties
+      
+      # TODO: Configure signing for release builds
+      # - name: Setup Keystore
+      #   run: |
+      #     echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > ${{ github.workspace }}/keystore.jks
+      #     echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> keystore.properties
+      #     echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> keystore.properties
+      #     echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> keystore.properties
+      #     echo "storeFile=${{ github.workspace }}/keystore.jks" >> keystore.properties
+      
+      - name: Build Release APK
+        run: ./gradlew assembleRelease --stacktrace
+      
+      - name: Build Release AAB (Android App Bundle)
+        run: ./gradlew bundleRelease --stacktrace
+      
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-apk
+          path: app/build/outputs/apk/release/*.apk
+      
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-aab
+          path: app/build/outputs/bundle/release/*.aab
+      
+      - name: Get version information
+        id: version
+        run: |
+          # Extract version from build.gradle.kts with fallback defaults
+          VERSION_NAME=$(grep -oP 'versionName\s*=\s*"\K[^"]+' app/build.gradle.kts || echo "1.0")
+          VERSION_CODE=$(grep -oP 'versionCode\s*=\s*\K[0-9]+' app/build.gradle.kts || echo "1")
+          echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
+          echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION_NAME ($VERSION_CODE)"
+
+  create-github-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: build-release
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Download APK artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-release-apk
+          path: ./artifacts/apk
+      
+      - name: Download AAB artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-release-aab
+          path: ./artifacts/aab
+      
+      - name: Get version tag
+        id: version_tag
+        run: |
+          if [ "${{ github.event_name }}" == "push" ]; then
+            VERSION_TAG=${GITHUB_REF#refs/tags/}
+          else
+            VERSION_TAG="v1.0.0-${{ github.event.inputs.release_type }}-$(date +%Y%m%d%H%M%S)"
+          fi
+          echo "tag=$VERSION_TAG" >> $GITHUB_OUTPUT
+      
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # TODO: Implement proper changelog generation from commit messages
+          # This could parse commit messages between tags and categorize them
+          CHANGELOG="## 🎯 Mission Objective - ${{ steps.version_tag.outputs.tag }}
+          
+          ### ✨ New Features
+          <!-- TODO: Auto-populate from commits with 'feat:' prefix -->
+          - Feature placeholder
+          
+          ### 🐛 Bug Fixes
+          <!-- TODO: Auto-populate from commits with 'fix:' prefix -->
+          - Bug fix placeholder
+          
+          ### 📝 Release Notes
+          This is a ${{ github.event.inputs.release_type || 'production' }} release.
+          
+          #### Installation Instructions
+          1. Download the APK file from the assets below
+          2. Enable installation from unknown sources on your Android device
+          3. Install the downloaded APK
+          
+          #### Known Issues
+          <!-- TODO: Link to GitHub issues marked for this release -->
+          - Check the [issue tracker](https://github.com/${{ github.repository }}/issues)
+          
+          ---
+          
+          ### 📦 Assets
+          - **app-release.apk**: Android APK for sideloading (beta/alpha testing)
+          - **app-release.aab**: Android App Bundle for Play Store deployment"
+          
+          echo "$CHANGELOG" > changelog.md
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version_tag.outputs.tag }}
+          name: Mission Objective ${{ steps.version_tag.outputs.tag }}
+          body_path: changelog.md
+          draft: false
+          prerelease: ${{ github.event.inputs.release_type == 'alpha' || github.event.inputs.release_type == 'beta' }}
+          files: |
+            ./artifacts/apk/*.apk
+            ./artifacts/aab/*.aab
+
+  # TODO: Implement Play Store deployment
+  deploy-to-play-store:
+    name: Deploy to Google Play Store
+    runs-on: ubuntu-latest
+    needs: build-release
+    if: github.event.inputs.release_type == 'production' || startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Download AAB artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-release-aab
+          path: ./artifacts/aab
+      
+      # TODO: Configure Google Play Store deployment
+      # - name: Deploy to Play Store
+      #   uses: r0adkll/upload-google-play@v1
+      #   with:
+      #     serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_JSON }}
+      #     packageName: com.example.missionobjective
+      #     releaseFiles: ./artifacts/aab/*.aab
+      #     track: ${{ github.event.inputs.release_type || 'production' }}
+      #     status: completed
+      #     whatsNewDirectory: distribution/whatsnew
+      
+      - name: Play Store Deployment Placeholder
+        run: |
+          echo "📱 Play Store deployment not yet configured"
+          echo ""
+          echo "To enable Play Store deployment:"
+          echo "1. Create a Google Play Console service account"
+          echo "2. Download the service account JSON key"
+          echo "3. Add PLAY_STORE_SERVICE_ACCOUNT_JSON to GitHub secrets"
+          echo "4. Uncomment the deployment step above"
+          echo "5. Create whatsnew files in distribution/whatsnew/ directory"
+
+  # TODO: Implement App Store (iOS) deployment
+  deploy-to-app-store:
+    name: Deploy to Apple App Store
+    runs-on: macos-latest
+    needs: build-release
+    if: false  # Disabled until iOS support is added
+    permissions: {}
+    
+    steps:
+      # TODO: This requires iOS/Swift implementation
+      # - name: Build iOS IPA
+      #   run: |
+      #     # Build commands for iOS app
+      #     # xcodebuild archive...
+      #     # xcodebuild -exportArchive...
+      
+      # - name: Deploy to App Store
+      #   uses: apple-actions/upload-testflight-build@v1
+      #   with:
+      #     app-path: 'path/to/app.ipa'
+      #     issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
+      #     api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
+      #     api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+      
+      - name: App Store Deployment Placeholder
+        run: |
+          echo "🍎 App Store deployment not yet configured"
+          echo ""
+          echo "To enable App Store deployment:"
+          echo "1. Implement iOS version of the app"
+          echo "2. Configure App Store Connect API credentials"
+          echo "3. Add required secrets to GitHub repository"
+          echo "4. Uncomment the deployment steps above"
+
+  # TODO: Implement websocket notification system
+  notify-update-available:
+    name: Notify New Version Available
+    runs-on: ubuntu-latest
+    needs: [create-github-release]
+    if: always() && needs.create-github-release.result == 'success'
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Get release information
+        id: release_info
+        run: |
+          VERSION_TAG="${{ needs.create-github-release.outputs.tag || github.ref_name }}"
+          echo "version=$VERSION_TAG" >> $GITHUB_OUTPUT
+      
+      # TODO: Implement backend websocket notification
+      # - name: Send WebSocket Notification
+      #   run: |
+      #     curl -X POST ${{ secrets.WEBSOCKET_BACKEND_URL }}/notify \
+      #       -H "Content-Type: application/json" \
+      #       -H "Authorization: Bearer ${{ secrets.WEBSOCKET_API_KEY }}" \
+      #       -d '{
+      #         "event": "new_version_available",
+      #         "version": "${{ steps.release_info.outputs.version }}",
+      #         "changelog": {
+      #           "features": [
+      #             "New feature 1",
+      #             "New feature 2"
+      #           ],
+      #           "bugfixes": [
+      #             "Bug fix 1",
+      #             "Bug fix 2"
+      #           ],
+      #           "separator": "/ ----",
+      #           "feature_separator": "/--- [Feature Name] ---"
+      #         },
+      #         "download_url": "${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ steps.release_info.outputs.version }}"
+      #       }'
+      
+      - name: WebSocket Notification Placeholder
+        run: |
+          echo "🔔 WebSocket notification not yet configured"
+          echo ""
+          echo "Version: ${{ steps.release_info.outputs.version }}"
+          echo ""
+          echo "To enable WebSocket notifications:"
+          echo "1. Set up backend WebSocket server"
+          echo "2. Create notification endpoint (POST /notify)"
+          echo "3. Add WEBSOCKET_BACKEND_URL to GitHub secrets"
+          echo "4. Add WEBSOCKET_API_KEY to GitHub secrets"
+          echo "5. Uncomment the WebSocket notification step above"
+          echo ""
+          echo "Notification Payload Format:"
+          echo "{"
+          echo '  "event": "new_version_available",'
+          echo '  "version": "v1.0.0",'
+          echo '  "changelog": {'
+          echo '    "features": ["Feature 1", "Feature 2"],'
+          echo '    "bugfixes": ["Fix 1", "Fix 2"],'
+          echo '    "separator": "/ ----",'
+          echo '    "feature_separator": "/--- [Feature Name] ---"'
+          echo '  },'
+          echo '  "download_url": "https://github.com/.../releases/tag/v1.0.0"'
+          echo "}"
+      
+      # TODO: Implement website update notification
+      # - name: Update Website with New Version
+      #   run: |
+      #     curl -X POST ${{ secrets.WEBSITE_API_URL }}/update-version \
+      #       -H "Content-Type: application/json" \
+      #       -H "Authorization: Bearer ${{ secrets.WEBSITE_API_KEY }}" \
+      #       -d '{
+      #         "version": "${{ steps.release_info.outputs.version }}",
+      #         "release_notes_url": "${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ steps.release_info.outputs.version }}"
+      #       }'
+      
+      - name: Website Update Placeholder
+        run: |
+          echo "🌐 Website update notification not yet configured"
+          echo ""
+          echo "To enable website updates:"
+          echo "1. Create website API endpoint for version updates"
+          echo "2. Add WEBSITE_API_URL to GitHub secrets"
+          echo "3. Add WEBSITE_API_KEY to GitHub secrets"
+          echo "4. Uncomment the website update step above"
+
+  deployment-summary:
+    name: Deployment Summary
+    runs-on: ubuntu-latest
+    needs: [create-github-release, notify-update-available]
+    if: always()
+    permissions: {}
+    
+    steps:
+      - name: Create deployment summary
+        run: |
+          echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Completed Steps:" >> $GITHUB_STEP_SUMMARY
+          echo "- Built release APK and AAB" >> $GITHUB_STEP_SUMMARY
+          echo "- Created GitHub release with artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📋 TODO - Future Deployment Features:" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] Configure Play Store deployment (Google Play Console API)" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] Implement App Store deployment (requires iOS app)" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] Set up backend WebSocket server for notifications" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] Implement website API for version updates" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] Configure automatic changelog generation" >> $GITHUB_STEP_SUMMARY
+          echo "- [ ] Set up signing keys for production releases" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📝 Next Steps:" >> $GITHUB_STEP_SUMMARY
+          echo "1. Review the release on [GitHub Releases](https://github.com/${{ github.repository }}/releases)" >> $GITHUB_STEP_SUMMARY
+          echo "2. Test the APK on Android devices" >> $GITHUB_STEP_SUMMARY
+          echo "3. Uncomment and configure deployment steps as needed" >> $GITHUB_STEP_SUMMARY
