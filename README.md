@@ -61,6 +61,8 @@ Build a Kotlin-based Android app using Jetpack Compose that visualises daily tas
 
 Theme: **Cozy hand-drawn map** (from mood board sketches)
 
+Figma Design: https://www.figma.com/proto/lz8THnLpMvi11UQNZfie6l?node-id=24-1385&locale=en
+
 * Warm parchment tones, soft shadows, and rounded markers
 * UI Font: *Nunito*
 * Title Font: *IM Fell English*
