@@ -81,7 +81,7 @@ Alternate future themes:
 * **Framework:** Jetpack Compose
 * **Database:** Room
 * **Architecture:** MVVM
-* **Dependency Injection:** Hilt (optional)
+* **Dependency Injection:** KSP
 * **Location/Maps:** Google Maps Compose (or Mapbox for custom tiles)
 * **Background Jobs:** WorkManager
 * **Calendar Access:** Android Calendar Provider
